@@ -2,26 +2,22 @@ package properties;
 
 import participants.Participant;
 
-public class Color extends Property {
+public class Railroad extends Property {
     final int[] rent;
     final int mortgageValue;
+    final Set set;
     int price;
     Participant owner;
-    final Set set;
-    int buildingCount;
-    final int buildingCost;
 
-    public Color(int id, Type type, String name,
-                 int[] rent, int mortgageValue, Participant owner, int price, Set set, int buildingCost) {
+    public Railroad(int id, Type type, String name,
+                    int[] rent, int mortgageValue, Participant owner, int price, Set set) {
         super(id, type, name);
         this.rent = rent;
         this.mortgageValue = mortgageValue;
         this.owner = owner;
         this.price = price;
         this.set = set;
-        this.buildingCost = buildingCost;
     }
-
 
     public int[] getRent() {
         return rent;
@@ -49,17 +45,5 @@ public class Color extends Property {
 
     public Set getSet() {
         return set;
-    }
-
-    public int getBuildingCount() {
-        return buildingCount;
-    }
-
-    public void setBuildingCount(int buildingCount) {
-        this.buildingCount = buildingCount;
-    }
-
-    public int getBuildingCost() {
-        return buildingCost;
     }
 }

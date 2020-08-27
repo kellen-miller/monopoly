@@ -3,6 +3,7 @@ package participants;
 import properties.Property;
 
 public abstract class Participant {
+    int id;
     Property[] propertiesOwned = null;
     int cashAvailable = 20580;
 
