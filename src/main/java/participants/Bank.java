@@ -1,8 +1,12 @@
 package participants;
 
+
+import properties.Property;
+
+import java.util.List;
+
 public class Bank extends Participant {
-    Bank(){
-        this.id = 1;
-        this.cashAvailable = 20580;
+    public Bank(int id, List<Property> propertiesOwned, int cashAvailable) {
+        super(id, propertiesOwned, cashAvailable);
     }
 }

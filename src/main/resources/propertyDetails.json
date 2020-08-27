@@ -53,7 +53,7 @@
     },
     {
       "id": 6,
-      "type": "RAILROAD",
+      "type": "REAL_ESTATE",
       "name": "Reading Railroad",
       "price": 200,
       "rent": [
@@ -144,7 +144,7 @@
     },
     {
       "id": 13,
-      "type": "UTILITY",
+      "type": "REAL_ESTATE",
       "name": "Electric Company",
       "price": 150,
       "mortgageValue": 75,
@@ -186,7 +186,7 @@
     },
     {
       "id": 16,
-      "type": "RAILROAD",
+      "type": "REAL_ESTATE",
       "name": "Pennsylvania Railroad",
       "price": 200,
       "rent": [
@@ -317,7 +317,7 @@
     },
     {
       "id": 26,
-      "type": "RAILROAD",
+      "type": "REAL_ESTATE",
       "name": "B&O Railroad",
       "price": 200,
       "rent": [
@@ -348,7 +348,7 @@
     },
     {
       "id": 28,
-      "type": "UTILITY",
+      "type": "REAL_ESTATE",
       "name": "Water Works",
       "price": 150,
       "mortgageValue": 75,
@@ -451,7 +451,7 @@
     },
     {
       "id": 36,
-      "type": "RAILROAD",
+      "type": "REAL_ESTATE",
       "name": "Short Line",
       "price": 200,
       "rent": [

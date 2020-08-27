@@ -11,8 +11,8 @@ public class Color extends Property {
     int buildingCount;
     final int buildingCost;
 
-    public Color(int id, Type type, String name,
-                 int[] rent, int mortgageValue, Participant owner, int price, Set set, int buildingCost) {
+    public Color(int id, Type type, String name, int[] rent, int mortgageValue, Participant owner,
+                 int price, Set set, int buildingCost) {
         super(id, type, name);
         this.rent = rent;
         this.mortgageValue = mortgageValue;

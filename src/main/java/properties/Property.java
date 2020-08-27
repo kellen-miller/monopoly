@@ -28,12 +28,9 @@ public abstract class Property {
         REAL_ESTATE,
         CARD_DRAW,
         TAX,
-        RAILROAD,
-        CHANCE,
         JAIL,
         FREE_PARKING,
-        GO_TO_JAIL,
-        UTILITY
+        GO_TO_JAIL
     }
 
     public enum Set {
