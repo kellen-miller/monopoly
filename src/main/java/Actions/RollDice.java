@@ -5,7 +5,9 @@ import participants.Player;
 
 import java.util.Random;
 
-public class RollDice implements Action {
+public class RollDice implements Action, Comparable<Action> {
+    private final int priority = 10;
+
     public static int rollDie(int[] die) {
         return die[new Random().nextInt(die.length)];
     }
@@ -23,7 +25,16 @@ public class RollDice implements Action {
             player.setCurrentSpace(gameState.getGame().getJailLocation());
         } else {
             player.setCurrentSpace(player.getCurrentSpace() + roll1 + roll2);
-
         }
+    }
+
+    @Override
+    public int getPriority() {
+        return this.priority;
+    }
+
+    @Override
+    public int compareTo(Action action) {
+        return Integer.compare(this.priority, action.getPriority());
     }
 }

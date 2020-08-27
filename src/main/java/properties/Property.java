@@ -41,7 +41,7 @@ public abstract class Property {
         RED,
         YELLOW,
         GREEN,
-        DARK_BLUE,
+        BLUE,
         RAILROAD,
         UTILITY
     }

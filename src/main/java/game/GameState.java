@@ -19,13 +19,20 @@ public class GameState {
         this.game = game;
         this.winner = false;
         this.turnIndex = -1;
-        this.rolledDoubles = new HashMap<>();
-        this.actions = new PriorityQueue<>();
+        setRolledDoubles();
+        setInitialActions();
     }
 
-    private void setInitialRollDiceAction() {
+    private void setInitialActions() {
         this.actions = new PriorityQueue<>();
         actions.offer(new RollDice());
+    }
+
+    private void setRolledDoubles() {
+        this.rolledDoubles = new HashMap<>();
+        for (Player player : game.getPlayers()) {
+            this.rolledDoubles.put(player, 0);
+        }
     }
 
     public Player getWhoseTurn() {

@@ -14,22 +14,24 @@ import java.util.*;
 
 public class Game {
     private static final int BANK_ID = 1;
-    private static final int INITIAL_CASH = 20580;
+    private static final int INITIAL_BANK_CASH = 20580;
+    private static final int INITIAL_PLAYER_CASH = 1500;
     private static final int INITIAL_HOUSES = 32;
     public static Bank bank;
     private Map<Property.Set, List<Integer>> setIdMap;
     private Property[] properties;
     private int goLocation;
     private int jailLocation;
-    private List<Participant.Token> tokens;
+    private final ArrayList<Participant.Token> tokens;
     private List<Player> players;
     private int freeParkingMoney = 0;
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Game(int players) throws IOException {
-        bank = new Bank(BANK_ID, new ArrayList<>(), INITIAL_CASH);
+        bank = new Bank(BANK_ID, new ArrayList<>(), INITIAL_BANK_CASH);
         this.setIdMap = new HashMap<>();
         createProperties();
-        this.tokens = Arrays.asList(Participant.Token.values());
+        this.tokens = new ArrayList(Arrays.asList(Participant.Token.values()));
         createPlayers(players);
     }
 
@@ -38,7 +40,7 @@ public class Game {
     }
 
     public static int getInitialCash() {
-        return INITIAL_CASH;
+        return INITIAL_BANK_CASH;
     }
 
     public static int getInitialHouses() {
@@ -68,9 +70,9 @@ public class Game {
                     case FREE_PARKING -> createFreeParkingProperty(props);
                     case GO_TO_JAIL -> createGoToJailProperty(props);
                 };
-                bank.getPropertiesOwned().add(property);
                 this.properties[property.getId() - 1] = property;
             }
+            bank.setPropertiesOwned(Arrays.asList(this.properties));
         }
     }
 
@@ -81,9 +83,10 @@ public class Game {
             this.players.add(new Player(
                     bank.getId() + i + 1,
                     new ArrayList<>(),
-                    1500,
+                    INITIAL_PLAYER_CASH,
                     token
             ));
+            bank.setCashAvailable(bank.getCashAvailable() - INITIAL_PLAYER_CASH);
         }
         Collections.shuffle(this.players);
     }
@@ -95,7 +98,7 @@ public class Game {
     private Go createGoProperty(JsonNode prop) {
         this.goLocation = prop.at("/id").asInt() - 1;
         return new Go(
-                goLocation,
+                prop.at("/id").asInt(),
                 Property.Type.GO,
                 prop.at("/name").asText()
         );
@@ -104,7 +107,7 @@ public class Game {
     private Jail createJailProperty(JsonNode prop) {
         this.jailLocation = prop.at("/id").asInt() - 1;
         return new Jail(
-                this.jailLocation,
+                prop.at("/id").asInt(),
                 Property.Type.GO,
                 prop.at("/name").asText()
         );
@@ -127,7 +130,7 @@ public class Game {
     }
 
     private Property handleCreateRealEstateProperty(JsonNode prop) {
-        Property.Set set = Property.Set.valueOf(prop.at("set").asText());
+        Property.Set set = Property.Set.valueOf(prop.at("/set").asText());
         int id = prop.at("/id").asInt();
         addToSetMap(set, id);
         if (set == Property.Set.RAILROAD) {
@@ -188,7 +191,7 @@ public class Game {
     }
 
     private Tax createTaxProperty(JsonNode prop) {
-        if (prop.at("taxRate").isNull()) {
+        if (prop.at("/taxRate").isNull()) {
             return new Tax(
                     prop.at("/id").asInt(),
                     Property.Type.GO,
@@ -232,10 +235,6 @@ public class Game {
 
     public List<Participant.Token> getTokens() {
         return tokens;
-    }
-
-    public void setTokens(List<Participant.Token> tokens) {
-        this.tokens = tokens;
     }
 
     public List<Player> getPlayers() {
