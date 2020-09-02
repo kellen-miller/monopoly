@@ -1,5 +1,8 @@
 package properties;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import game.Game;
 import participants.Participant;
 
 public class Color extends Property {
@@ -20,6 +23,20 @@ public class Color extends Property {
         this.price = price;
         this.set = set;
         this.buildingCost = buildingCost;
+    }
+
+    public Color(JsonNode node) {
+        this(
+                node.at("/id").asInt(),
+                Type.REAL_ESTATE,
+                node.at("/name").asText(),
+                new ObjectMapper().convertValue(node.at("/rent"), int[].class),
+                node.at("/mortgageValue").asInt(),
+                Game.bank,
+                node.at("/price").asInt(),
+                Set.valueOf(node.at("/set").asText()),
+                node.at("/buildingCost").asInt()
+        );
     }
 
 

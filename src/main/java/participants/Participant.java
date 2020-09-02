@@ -35,6 +35,10 @@ public abstract class Participant {
         this.cashAvailable = cashAvailable;
     }
 
+    public void updateBankBalance(int cash) {
+        this.cashAvailable += cash;
+    }
+
     public enum Token {
         Scottish_Terrier,
         Battleship,

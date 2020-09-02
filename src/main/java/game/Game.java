@@ -18,20 +18,20 @@ public class Game {
     private static final int INITIAL_PLAYER_CASH = 1500;
     private static final int INITIAL_HOUSES = 32;
     public static Bank bank;
-    private Map<Property.Set, List<Integer>> setIdMap;
-    private Property[] properties;
-    private int goLocation;
-    private int jailLocation;
-    private final ArrayList<Participant.Token> tokens;
-    private List<Player> players;
-    private int freeParkingMoney = 0;
+    private static Map<Property.Set, List<Integer>> setIdMap;
+    private static Property[] properties;
+    private static int goLocation;
+    private static int jailLocation;
+    private static List<Participant.Token> tokens;
+    private static List<Player> players;
+    private static int freeParkingMoney = 0;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Game(int players) throws IOException {
         bank = new Bank(BANK_ID, new ArrayList<>(), INITIAL_BANK_CASH);
-        this.setIdMap = new HashMap<>();
+        setIdMap = new HashMap<>();
         createProperties();
-        this.tokens = new ArrayList(Arrays.asList(Participant.Token.values()));
+        tokens = new ArrayList(Arrays.asList(Participant.Token.values()));
         createPlayers(players);
     }
 
@@ -58,155 +58,52 @@ public class Game {
     private void createProperties() throws IOException {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream("propertyDetails.json")) {
             ArrayNode propsArray = (ArrayNode) new ObjectMapper().readTree(is).get("properties");
-            this.properties = new Property[propsArray.size()];
+            properties = new Property[propsArray.size()];
             for (int i = 0; i < propsArray.size(); i++) {
                 JsonNode props = propsArray.get(i);
                 Property property = switch (Property.Type.valueOf(props.at("/type").asText())) {
-                    case GO -> createGoProperty(props);
-                    case REAL_ESTATE -> handleCreateRealEstateProperty(props);
-                    case CARD_DRAW -> createCardDrawProperty(props);
-                    case TAX -> createTaxProperty(props);
-                    case JAIL -> createJailProperty(props);
-                    case FREE_PARKING -> createFreeParkingProperty(props);
-                    case GO_TO_JAIL -> createGoToJailProperty(props);
+                    case GO -> {
+                        goLocation = props.at("/id").asInt() - 1;
+                        yield new Go(props);
+                    }
+                    case REAL_ESTATE -> {
+                        Property.Set set = Property.Set.valueOf(props.at("/set").asText());
+                        setIdMap.computeIfAbsent(set, l -> new ArrayList<>()).add(props.at("/id").asInt());
+                        if (set == Property.Set.RAILROAD) {
+                            yield new Railroad(props);
+                        } else if (set == Property.Set.UTILITY) {
+                            yield new Utility(props);
+                        } else {
+                            yield new Color(props);
+                        }
+                    }
+                    case CARD_DRAW -> new CardDraw(props);
+                    case TAX -> new Tax(props);
+                    case JAIL -> {
+                        jailLocation = props.at("/id").asInt() - 1;
+                        yield new Jail(props);
+                    }
+                    case FREE_PARKING -> new FreeParking(props);
+                    case GO_TO_JAIL -> new GoToJail(props);
                 };
-                this.properties[property.getId() - 1] = property;
+                properties[property.getId() - 1] = property;
             }
-            bank.setPropertiesOwned(Arrays.asList(this.properties));
+            bank.setPropertiesOwned(Arrays.asList(properties));
         }
     }
 
     private void createPlayers(int players) {
-        this.players = new ArrayList<>();
+        Game.players = new ArrayList<>();
         for (int i = 0; i < players; i++) {
-            Participant.Token token = this.tokens.remove(new Random().nextInt(this.tokens.size()));
-            this.players.add(new Player(
+            Game.players.add(new Player(
                     bank.getId() + i + 1,
                     new ArrayList<>(),
                     INITIAL_PLAYER_CASH,
-                    token
+                    tokens.remove(new Random().nextInt(tokens.size()))
             ));
-            bank.setCashAvailable(bank.getCashAvailable() - INITIAL_PLAYER_CASH);
+            bank.updateBankBalance(-INITIAL_PLAYER_CASH);
         }
-        Collections.shuffle(this.players);
-    }
-
-    private void addToSetMap(Property.Set set, int id) {
-        this.setIdMap.computeIfAbsent(set, l -> new ArrayList<>()).add(id);
-    }
-
-    private Go createGoProperty(JsonNode prop) {
-        this.goLocation = prop.at("/id").asInt() - 1;
-        return new Go(
-                prop.at("/id").asInt(),
-                Property.Type.GO,
-                prop.at("/name").asText()
-        );
-    }
-
-    private Jail createJailProperty(JsonNode prop) {
-        this.jailLocation = prop.at("/id").asInt() - 1;
-        return new Jail(
-                prop.at("/id").asInt(),
-                Property.Type.GO,
-                prop.at("/name").asText()
-        );
-    }
-
-    private GoToJail createGoToJailProperty(JsonNode prop) {
-        return new GoToJail(
-                prop.at("/id").asInt(),
-                Property.Type.GO,
-                prop.at("/name").asText()
-        );
-    }
-
-    private FreeParking createFreeParkingProperty(JsonNode prop) {
-        return new FreeParking(
-                prop.at("/id").asInt(),
-                Property.Type.GO,
-                prop.at("/name").asText()
-        );
-    }
-
-    private Property handleCreateRealEstateProperty(JsonNode prop) {
-        Property.Set set = Property.Set.valueOf(prop.at("/set").asText());
-        int id = prop.at("/id").asInt();
-        addToSetMap(set, id);
-        if (set == Property.Set.RAILROAD) {
-            return createRailRoadProperty(prop);
-        } else if (set == Property.Set.UTILITY) {
-            return createUtilityProperty(prop);
-        } else {
-            return createColorProperty(prop);
-        }
-    }
-
-    private Railroad createRailRoadProperty(JsonNode prop) {
-        int[] rent = new ObjectMapper().convertValue(prop.at("/rent"), int[].class);
-        return new Railroad(
-                prop.at("/id").asInt(),
-                Property.Type.REAL_ESTATE,
-                prop.at("/name").asText(),
-                rent,
-                prop.at("/mortgageValue").asInt(),
-                bank,
-                prop.at("/price").asInt(),
-                Property.Set.RAILROAD
-        );
-    }
-
-    private Utility createUtilityProperty(JsonNode prop) {
-        return new Utility(
-                prop.at("/id").asInt(),
-                Property.Type.REAL_ESTATE,
-                prop.at("/name").asText(),
-                prop.at("/price").asInt(),
-                prop.at("/mortgageValue").asInt(),
-                Property.Set.UTILITY
-        );
-    }
-
-    private Color createColorProperty(JsonNode prop) {
-        int[] rent = new ObjectMapper().convertValue(prop.at("/rent"), int[].class);
-        return new Color(
-                prop.at("/id").asInt(),
-                Property.Type.REAL_ESTATE,
-                prop.at("/name").asText(),
-                rent,
-                prop.at("/mortgageValue").asInt(),
-                bank,
-                prop.at("/price").asInt(),
-                Property.Set.valueOf(prop.at("/set").asText()),
-                prop.at("/buildingCost").asInt()
-        );
-    }
-
-    private CardDraw createCardDrawProperty(JsonNode prop) {
-        return new CardDraw(
-                prop.at("/id").asInt(),
-                Property.Type.GO,
-                prop.at("/name").asText()
-        );
-    }
-
-    private Tax createTaxProperty(JsonNode prop) {
-        if (prop.at("/taxRate").isNull()) {
-            return new Tax(
-                    prop.at("/id").asInt(),
-                    Property.Type.GO,
-                    prop.at("/name").asText(),
-                    prop.at("/taxAmount").asInt()
-            );
-        } else {
-            return new Tax(
-                    prop.at("/id").asInt(),
-                    Property.Type.GO,
-                    prop.at("/name").asText(),
-                    prop.at("/taxAmount").asInt(),
-                    prop.at("/taxRate").asDouble()
-            );
-        }
+        Collections.shuffle(Game.players);
     }
 
     public int getGoLocation() {
@@ -222,7 +119,7 @@ public class Game {
     }
 
     public void setSetIdMap(Map<Property.Set, List<Integer>> setIdMap) {
-        this.setIdMap = setIdMap;
+        Game.setIdMap = setIdMap;
     }
 
     public Property[] getProperties() {
@@ -230,7 +127,7 @@ public class Game {
     }
 
     public void setProperties(Property[] properties) {
-        this.properties = properties;
+        Game.properties = properties;
     }
 
     public List<Participant.Token> getTokens() {
@@ -242,7 +139,7 @@ public class Game {
     }
 
     public void setPlayers(List<Player> players) {
-        this.players = players;
+        Game.players = players;
     }
 
     public int getFreeParkingMoney() {
@@ -250,6 +147,6 @@ public class Game {
     }
 
     public void setFreeParkingMoney(int freeParkingMoney) {
-        this.freeParkingMoney = freeParkingMoney;
+        Game.freeParkingMoney = freeParkingMoney;
     }
 }
